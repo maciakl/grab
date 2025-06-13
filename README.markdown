@@ -37,7 +37,7 @@ Examples:
 ```
 Grab is not smart enough to figure out which released version is correct for your platform, so it will list the available files and ask you which one you want.
 
-![grab example](/images/grab.jpg)
+![grab](https://github.com/user-attachments/assets/1a79c91f-a687-4858-bee1-9621373d0c2c)
 
 You are the user, you press the buttons.
 
