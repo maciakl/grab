@@ -1,0 +1,109 @@
+#!/bin/bash
+
+VER="0.2.4"
+
+GR="\033[0;36m"
+RD="\033[0;31m"
+YL="\033[0;33m"
+OF="\033[0m"
+
+function msg {
+    echo -e "$GR${1}$OF"
+}
+
+function warn {
+    echo -e "$YL${1}$OF"
+}
+
+function err {
+    echo -e "$RD${1}$OF"
+}
+
+msg "\ngrab version ${VER}"
+msg "platform: ${OSTYPE}"
+
+command -v wget >/dev/null 2>&1 || { err "wget not installed"; exit 1;} 
+command -v unzip >/dev/null 2>&1 || { err "unzip not installed"; exit 1;} 
+command -v tar >/dev/null 2>&1 || { err "tar not installed"; exit 1;} 
+command -v curl >/dev/null 2>&1 || { err "curl not installed"; exit 1;} 
+
+[ -z $1 ] && { err "1st arggument must be a github address in the format: user/repo"; exit 1; }
+
+u="${1}"        # url
+p="${1##*/}"    # project name
+
+if [ -z $2 ]; then
+    ex=${1##*/}
+    warn "2rd arggument (executable name) missing, assuming it is: ${ex}"
+    e="${ex}"
+else
+    e="${2}"
+fi
+
+# grab list of released files from github
+lst=$(curl -s "https://api.github.com/repos/${u}/releases/latest" \
+    | grep "browser_download_url" | cut -d '"' -f 4 | xargs -n1 basename \
+    | grep ${p} | grep "zip$\|gz$")
+
+[ $? -ne 0 ] && { err "unable to find eligible files in the latest release of this repository"; exit 1; }
+
+echo -e "\nchoose the version you would like to install:\n"
+select choice in ${lst}; do
+    if [[ -n $choice ]]; then
+        a="${choice}"
+        msg "\nYou chose to install ${a}"
+        break
+    else
+        err "invalid choice, try again"
+    fi
+done
+
+
+tmpf="/tmp/grab_cache_$$"
+msg "creating cache in ${tmpf}"
+mkdir "${tmpf}"
+
+[ -d "${tmpf}" ] || { err "failed to create cache folder ${tmpf}"; exit 1; }
+
+cd ${tmpf}
+
+msg "downloading ${a} from github.com/${u}" 
+wget -qN "https://github.com/${u}/releases/latest/download/${a}"
+[ $? -ne 0 ] && { err "unable to download https://github.com/${u}/releases/latest/download/${a}"; exit 1; }
+
+[ -f ${a} ] || { err "file ${a} not found"; rm -rf ${tmpf}; exit 1; }
+
+ext="${a##*.}"
+msg "archive type is ${ext}"
+
+msg "extracting ${e} from ${a}..."
+
+if [ $ext == "zip" ]; then
+    unzip -oq ${a}
+elif [ $ext == "gz" ]; then
+    tar -xzf ${a} --strip-components 1
+else
+    err "unable to extract from ${ext}"
+    rm -rf ${tmpf}
+fi
+
+[ $? -ne 0 ] && { err "unable to unzip ${a}"; rm -rf ${tmpf}; exit 1; }
+
+
+msg "installing ${e} to /usr/local/bin..."
+chmod +x ${e} 
+sudo mv ${e} /usr/local/bin
+
+[ -f /usr/local/bin/${e} ] || { err "failed to install ${e}"; rm -rf ${tmpf}; exit 1; }
+
+msg "successfully installed"
+warn "to uninstall: rm -f /usr/local/bin/${e}"
+
+msg "cleaning up..."
+rm -rf ${tmpf}
+
+[ -d "${tmpf}" ] && { err "failed to delete cache folder ${tmpf}"; exit 1; }
+
+msg "~*~ done\n"
+
+
