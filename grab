@@ -89,9 +89,11 @@ fi
 
 [ $? -ne 0 ] && { err "unable to unzip ${a}"; rm -rf ${tmpf}; exit 1; }
 
-
 msg "installing ${e} to /usr/local/bin..."
 chmod +x ${e} 
+
+[ $? -ne 0 ] && { err "unable to make ${e} executable"; exit 1; }
+
 sudo mv ${e} /usr/local/bin
 
 [ -f /usr/local/bin/${e} ] || { err "failed to install ${e}"; rm -rf ${tmpf}; exit 1; }

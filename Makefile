@@ -1,10 +1,10 @@
 TARGET = grab
-ARCHIVE = grab.tar.gz
+ARCHIVE = grab.zip
 
 all: $(ARCHIVE)
 
 $(ARCHIVE): $(TARGET)
-	tar -czf $(ARCHIVE) $(TARGET)
+	zip $(ARCHIVE) $(TARGET)
 
 clean:
 	rm -f $(ARCHIVE)
