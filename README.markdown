@@ -1,4 +1,4 @@
-# grab
+# ✊ grab
 
 A simple bash script to install the latest version of single-executable binaries directly from GitHub.
 
@@ -15,7 +15,7 @@ Grab takes 2 arguments:
 1. The repository in the format `user/repo`
 3. (optional) The name of the executable within the archive, if it's different from the repository name
 
-You can skip the second argument, in which case it will default to the name of the repository (eg. `fzf`).
+You can skip the second argument, in which case it will default to the name of the repository (eg. `rg`).
 
 The installed program must be:
 
@@ -43,6 +43,17 @@ You are the user, you press the buttons.
 
 If you installed the wrong version, just run the command again. Grab will happily overwrite the previous version.
 
+### Scripting Support
+
+Grab is interactive. It will always ask and wait for a numeric input. If you already know which file from the release you want to install, and where it is on the list, you can use the `yes` command to pass it in like so:
+
+```bash
+yes 1 | grab maciakl/grab
+```
+This will automatically install the 1st file on the list.
+
+⚠️ Note: the ordering of the files may change between releases. Grab always downloads the latest release.
+
 ## Dependencies
 
 Grab requires `bash`, `wget`, `curl`, `unzip` and `tar`. Most of these should be installed by default. If you are missing them, you can install them using your package manager. For example, on Debian-based systems you can run:
@@ -63,7 +74,7 @@ Grab installs programs in `/usr/local/bin/`. To uninstall a program called `foo`
 
 ## Installing / Upgrading
 
-To install `grab`, you can use the following command:
+To install `grab` for the first time, you can use the following command:
 
 ```bash
 wget -qN https://github.com/maciakl/grab/releases/latest/download/grab.tar.gz \
@@ -73,8 +84,18 @@ wget -qN https://github.com/maciakl/grab/releases/latest/download/grab.tar.gz \
 && sudo mv /tmp/grab /usr/local/bin/grab
 ```
 
+### Upgrading
+
 You can upgrade `grab` via `grab` itself:
 
 ```bash
 grab maciakl/grab
+```
+
+### Uninstalling
+
+To remove `grab` from your system run:
+
+```bash
+sudo rm -f /usr/local/bin/grab
 ```
