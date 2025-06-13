@@ -45,12 +45,11 @@ If you installed the wrong version, just run the command again. Grab will happil
 
 ### Scripting Support
 
-Grab is interactive. It will always ask and wait for a numeric input. If you already know which file from the release you want to install, and where it is on the list, you can use the `yes` command to pass it in like so:
+Grab is interactive. It will always ask and wait for a numeric input. If you already know which file from the release you want to install, and where it is on the list, you can use the `yes` command to pass it in. For example, if you know you want to install the first item from the list you can do it like so:
 
 ```bash
 yes 1 | grab maciakl/grab
 ```
-This will automatically install the 1st file on the list.
 
 ⚠️ Note: the ordering of the files may change between releases. Grab always downloads the latest release.
 
@@ -84,6 +83,8 @@ wget -qN https://github.com/maciakl/grab/releases/latest/download/grab.zip \
 && sudo mv /tmp/grab /usr/local/bin/grab
 ```
 
+⚠️ Note: you need to make sure you have `unzip` installed before you try.
+
 ### Upgrading
 
 You can upgrade `grab` via `grab` itself:
@@ -99,3 +100,5 @@ To remove `grab` from your system run:
 ```bash
 sudo rm -f /usr/local/bin/grab
 ```
+
+⚠️ Note: this will only remove `grab` itself. All programs it installed will remain in `/usr/local/bin` and will need to be purged manually.
