@@ -102,3 +102,13 @@ sudo rm -f /usr/local/bin/grab
 ```
 
 ⚠️ Note: this will only remove `grab` itself. All programs it installed will remain in `/usr/local/bin` and will need to be purged manually.
+
+### FreeBSD
+
+On FreeBSD and other unix-like machines, `bash` may be installed in different location. Grab expects it to be in `/bin/bash`. To make it work on BSD, change the first line of the file to:
+
+```bash
+#!/usr/local/bin/bash
+```
+
+Alternatively you can symlink `/usr/local/bin/bash` to `/bin/bash` but I would not reccomend that.
