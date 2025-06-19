@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/env bash
 
-VER="0.2.6"
+VER="0.2.7"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -81,7 +81,11 @@ msg "Extracting ${e} from ${a} into ${tmpf}"
 if [ $ext == "zip" ]; then
     unzip -oq ${a}
 elif [ $ext == "gz" ]; then
-    tar -xzf ${a} --strip-components 1
+    tar -xzf ${a}
+    [ -f ${e} ] || { warn "Unable to find ${e}, flattening 1 level..."; tar -xzf ${a} --strip-components 1; }
+    [ -f ${e} ] || { warn "Unable to find ${e}, flattening 2 levels..."; tar -xzf ${a} --strip-components 2; }
+    [ -f ${e} ] || { warn "Unable to find ${e}, flattening 3 levels..."; tar -xzf ${a} --strip-components 3; }
+    [ -f ${e} ] || { err "Unable to find ${e}, giving up."; rm -rf ${tmpf}; exit 1; }
 else
     err "Unable to extract from ${ext}"
     rm -rf ${tmpf}
@@ -89,16 +93,17 @@ fi
 
 [ $? -ne 0 ] && { err "Unable to unzip ${a}"; rm -rf ${tmpf}; exit 1; }
 
-msg "Installing ${e} to /usr/local/bin..."
+msg "Making ${e} executable..."
 chmod +x ${e} 
 
-[ $? -ne 0 ] && { err "unable to make ${e} executable"; exit 1; }
+[ $? -ne 0 ] && { err "Unable to make ${e} executable"; rm -rf ${tmpf}; exit 1; }
 
+msg "Installing ${e} to /usr/local/bin..."
 sudo mv ${e} /usr/local/bin
 
 [ -f /usr/local/bin/${e} ] || { err "failed to install ${e}"; rm -rf ${tmpf}; exit 1; }
 
-msg "Successfully installed\n"
+msg "Successfully installed!\n"
 
 warn "To uninstall: rm -f /usr/local/bin/${e}"
 
