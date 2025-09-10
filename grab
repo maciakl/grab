@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-VER="0.2.8"
+VER="0.2.9"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -27,12 +27,12 @@ command -v unzip >/dev/null 2>&1 || { err "unzip not installed"; exit 1;}
 command -v tar >/dev/null 2>&1 || { err "tar not installed"; exit 1;} 
 command -v curl >/dev/null 2>&1 || { err "curl not installed"; exit 1;} 
 
-[ -z $1 ] && { err "1st arggument must be a github address in the format: user/repo"; exit 1; }
+[ -z "$1" ] && { err "1st arggument must be a github address in the format: user/repo"; exit 1; }
 
 u="${1}"        # url
 p="${1##*/}"    # project name
 
-if [ -z $2 ]; then
+if [ -z "$2" ]; then
     ex=${1##*/}
     warn "2rd arggument (executable name) missing, assuming it is: ${ex}"
     e="${ex}"
@@ -43,9 +43,8 @@ fi
 # grab list of released files from github
 lst=$(curl -s "https://api.github.com/repos/${u}/releases/latest" \
     | grep "browser_download_url" | cut -d '"' -f 4 | xargs -n1 basename \
-    | grep ${p} | grep -E 'zip$|gz$')
-
-[ $? -ne 0 ] && { err "unable to find eligible files in the latest release of this repository"; exit 1; }
+    | grep "${p}" | grep -E 'zip$|gz$') \
+    || { err "unable to find eligible files in the latest release of this repository"; exit 1; }
 
 echo -e "\n👉 Choose the version you would like to install:\n"
 select choice in ${lst}; do
@@ -65,13 +64,12 @@ mkdir "${tmpf}"
 
 [ -d "${tmpf}" ] || { err "failed to create cache folder ${tmpf}"; exit 1; }
 
-cd ${tmpf}
+cd ${tmpf} || { err "could not switch to cache folder ${tmpf}"; exit; }
 
 msg "Downloading ${a} from github.com/${u}" 
-wget -qN "https://github.com/${u}/releases/latest/download/${a}"
-[ $? -ne 0 ] && { err "Unable to download https://github.com/${u}/releases/latest/download/${a}"; exit 1; }
+wget -qN "https://github.com/${u}/releases/latest/download/${a}" || { err "Unable to download https://github.com/${u}/releases/latest/download/${a}"; exit 1; }
 
-[ -f ${a} ] || { err "File ${a} not found in ${tmpf}"; rm -rf ${tmpf}; exit 1; }
+[ -f "${a}" ] || { err "File ${a} not found in ${tmpf}"; rm -rf ${tmpf}; exit 1; }
 
 ext="${a##*.}"
 msg "Archive type is ${ext}"
@@ -79,34 +77,32 @@ msg "Archive type is ${ext}"
 od="${tmpf}/out"
 msg "Extracting ${e} from ${a} into ${od}"
 
-if [ $ext == "zip" ]; then
-    unzip -oq ${a} -d ${od}
-    [ -f ${od}/${e} ] || { ls -lh ${od}; warn "Unable to find ${e}, flattening..."; rm -rf ${od}; mkdir -p ${od}; unzip -oqj ${a} -d ${od}; }
-    [ -f ${od}/${e} ] || { ls -lh ${od}; err "Unable to find ${e}, giving up."; rm -rf ${tmpf}; exit 1; }
-elif [ $ext == "gz" ]; then
+if [ "$ext" == "zip" ]; then
+    unzip -oq "${a}" -d ${od}
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${e}, flattening..."; rm -rf ${od}; mkdir -p ${od}; unzip -oqj "${a}" -d ${od}; }
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${e}, giving up."; rm -rf ${tmpf}; exit 1; }
+elif [ "$ext" == "gz" ]; then
     mkdir -p ${od}
     [ -d ${od} ] || { err "Failed to create output directory ${od}"; rm -rf ${tmpf}; exit 1; }
-    tar -xzf ${a} -C ${od}
-    [ -f ${od}/${e} ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 1 level..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf ${a} --strip-components 1 -C ${od}; }
-    [ -f ${od}/${e} ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 2 levels..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf ${a} --strip-components 2 -C ${od}; }
-    [ -f ${od}/${e} ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 3 levels..."; rm -rf ${od}; mkdir -p ${od};  tar -xzf ${a} --strip-components 3 -C ${od}; }
-    [ -f ${od}/${e} ] || { ls -lh ${od}; err "Unable to find ${od}/${e}, giving up."; rm -rf ${tmpf}; exit 1; }
+    tar -xzf "${a}" -C ${od}
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 1 level..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 1 -C ${od}; }
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 2 levels..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 2 -C ${od}; }
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 3 levels..."; rm -rf ${od}; mkdir -p ${od};  tar -xzf "${a}" --strip-components 3 -C ${od}; }
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${od}/${e}, giving up."; rm -rf ${tmpf}; exit 1; }
 else
     err "Unable to extract from ${ext}"
     rm -rf ${tmpf}
 fi
 
-[ $? -ne 0 ] && { err "Unable to unzip ${a}"; rm -rf ${tmpf}; exit 1; }
+[ -f ${od}/"${e}" ] || { err "Unable to unzip ${a}"; rm -rf ${tmpf}; exit 1; }
 
 msg "Making ${e} executable..."
-chmod +x ${od}/${e} 
-
-[ $? -ne 0 ] && { err "Unable to make ${e} executable"; rm -rf ${tmpf}; exit 1; }
+chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; rm -rf ${tmpf}; exit 1; }
 
 msg "Installing ${e} to /usr/local/bin..."
-sudo mv ${od}/${e} /usr/local/bin
+sudo mv ${od}/"${e}" /usr/local/bin
 
-[ -f /usr/local/bin/${e} ] || { err "failed to install ${e}"; rm -rf ${tmpf}; exit 1; }
+[ -f /usr/local/bin/"${e}" ] || { err "failed to install ${e}"; rm -rf ${tmpf}; exit 1; }
 
 msg "Successfully installed!\n"
 
