@@ -1,5 +1,6 @@
 TARGET = grab
-ARCHIVE = grab.zip
+VERSION := $(shell sed -n 's/^VER="\([^"]*\)"/\1/p' $(TARGET))
+ARCHIVE = $(TARGET)-$(VERSION).zip
 
 all: $(ARCHIVE)
 
@@ -7,4 +8,4 @@ $(ARCHIVE): $(TARGET)
 	zip $(ARCHIVE) $(TARGET)
 
 clean:
-	rm -f $(ARCHIVE)
+	rm -f $(TARGET)-*.zip
