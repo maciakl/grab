@@ -76,7 +76,7 @@ Grab installs programs in `/usr/local/bin/`. To uninstall a program called `foo`
 To install `grab` for the first time, you can use the following command:
 
 ```bash
-wget -qN https://github.com/maciakl/grab/releases/latest/download/grab-0.2.9.zip \
+wget -qN https://github.com/maciakl/grab/releases/download/v0.3.1/grab-0.3.1.zip \
 -O /tmp/grab.zip \
 && unzip -q -o /tmp/grab.zip -d /tmp \
 && chmod +x /tmp/grab \
