@@ -69,7 +69,7 @@ cd ${tmpf} || { err "could not switch to cache folder ${tmpf}"; exit; }
 msg "Downloading ${a} from github.com/${u}" 
 wget -qN "https://github.com/${u}/releases/latest/download/${a}" || { err "Unable to download https://github.com/${u}/releases/latest/download/${a}"; exit 1; }
 
-[ -f "${a}" ] || { err "File ${a} not found in ${tmpf}"; rm -rf ${tmpf}; exit 1; }
+[ -f "${a}" ] || { err "File ${a} not found in ${tmpf}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
 ext="${a##*.}"
 msg "Archive type is ${ext}"
@@ -80,27 +80,28 @@ msg "Extracting ${e} from ${a} into ${od}"
 if [ "$ext" == "zip" ]; then
     unzip -oq "${a}" -d ${od}
     [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${e}, flattening..."; rm -rf ${od}; mkdir -p ${od}; unzip -oqj "${a}" -d ${od}; }
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${e}, giving up."; rm -rf ${tmpf}; exit 1; }
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
 elif [ "$ext" == "gz" ]; then
     mkdir -p ${od}
-    [ -d ${od} ] || { err "Failed to create output directory ${od}"; rm -rf ${tmpf}; exit 1; }
+    [ -d ${od} ] || { err "Failed to create output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
     cp "${a}" "${od}/"
-    [ -f "${od}/${a}" ] || { err "Failed to copy ${a} to ${od}"; rm -rf ${tmpf}; exit 1; }
-    cd ${od} || { err "Could not switch to output directory ${od}"; rm -rf ${tmpf}; exit 1; }
+    [ -f "${od}/${a}" ] || { err "Failed to copy ${a} to ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+    cd ${od} || { err "Could not switch to output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
     tar -xzf "${a}"
     [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 1 level..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 1 -C ${od}; }
     [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 2 levels..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 2 -C ${od}; }
     [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 3 levels..."; rm -rf ${od}; mkdir -p ${od};  tar -xzf "${a}" --strip-components 3 -C ${od}; }
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${od}/${e}, giving up."; rm -rf ${tmpf}; exit 1; }
+    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${od}/${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
 else
     err "Unable to extract from ${ext}"
+    cd /tmp
     rm -rf ${tmpf}
 fi
 
-[ -f ${od}/"${e}" ] || { err "Unable to unzip ${a}"; rm -rf ${tmpf}; exit 1; }
+[ -f ${od}/"${e}" ] || { err "Unable to unzip ${a}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
 msg "Making ${e} executable..."
-chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; rm -rf ${tmpf}; exit 1; }
+chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
 msg "Installing ${e} to /usr/local/bin..."
 sudo mv ${od}/"${e}" /usr/local/bin
@@ -112,10 +113,10 @@ msg "Successfully installed!\n"
 warn "To uninstall: sudo rm -f /usr/local/bin/${e}"
 
 msg "\nDeleting ${tmpf} and cleaning up..."
+cd /tmp
 rm -rf ${tmpf}
 
 [ -d "${tmpf}" ] && { err "Failed to delete cache folder ${tmpf}"; exit 1; }
 
 msg "done 👍\n"
-
 
