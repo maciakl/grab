@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="0.3.3"
+VER="0.3.4"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -27,6 +27,16 @@ command -v unzip >/dev/null 2>&1 || { err "unzip not installed"; exit 1;}
 command -v tar >/dev/null 2>&1 || { err "tar not installed"; exit 1;} 
 command -v curl >/dev/null 2>&1 || { err "curl not installed"; exit 1;} 
 
+indir="/usr/local/bin"
+
+if [[ "${OSTYPE}" == *"solaris"* ]]; then
+    msg "Detected Solaris, adjusting some settings..."
+    indir="/usr/bin"
+    grep="/usr/xpg4/bin/grep"
+else
+    grep="grep"
+fi
+
 [ -z "$1" ] && { err "1st arggument must be a github address in the format: user/repo"; exit 1; }
 
 u="${1}"        # url
@@ -43,7 +53,7 @@ fi
 # grab list of released files from github
 lst=$(curl -s "https://api.github.com/repos/${u}/releases/latest" \
     | grep "browser_download_url" | cut -d '"' -f 4 | xargs -n1 basename \
-    | grep "${p}" | grep -E 'zip$|gz$') \
+    | grep "${p}" | $grep -E 'zip$|gz$') \
     || { err "unable to find eligible files in the latest release of this repository"; exit 1; }
 
 echo -e "\n👉 Choose the version you would like to install:\n"
@@ -103,14 +113,14 @@ fi
 msg "Making ${e} executable..."
 chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
-msg "Installing ${e} to /usr/local/bin..."
-sudo mv ${od}/"${e}" /usr/local/bin
+msg "Installing ${e} to ${indir}..."
+sudo mv ${od}/"${e}" "${indir}/" || { err "failed to move ${e} to ${indir}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
-[ -f /usr/local/bin/"${e}" ] || { err "failed to install ${e}"; rm -rf ${tmpf}; exit 1; }
+[ -f ${indir}/"${e}" ] || { err "failed to install ${e}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
 msg "Successfully installed!\n"
 
-warn "To uninstall: sudo rm -f /usr/local/bin/${e}"
+warn "To uninstall: sudo rm -f ${indir}/${e}"
 
 msg "\nDeleting ${tmpf} and cleaning up..."
 cd /tmp
