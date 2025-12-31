@@ -64,7 +64,9 @@ sudo apt install wget curl unzip
 
 ## Uninstalling Programs Installed with Grab
 
-Grab installs programs in `/usr/local/bin/`. To uninstall a program called `foo` just run:
+Grab installs programs in `/usr/local/bin/` (or `/usr/bin` on solaris).
+
+To uninstall a program called `foo` just run:
 
 ```bash
     sudo rm -f /usr/local/bin/foo
@@ -76,14 +78,14 @@ Grab installs programs in `/usr/local/bin/`. To uninstall a program called `foo`
 To install `grab` for the first time, you can use the following command:
 
 ```bash
-wget -qN https://github.com/maciakl/grab/releases/download/v0.3.3/grab-0.3.3.zip \
+wget -qN https://github.com/maciakl/grab/releases/download/v0.3.4/grab-0.3.4.zip \
 -O /tmp/grab.zip \
 && unzip -q -o /tmp/grab.zip -d /tmp \
 && chmod +x /tmp/grab \
 && sudo mv /tmp/grab /usr/local/bin/grab
 ```
 
-⚠️ Note: you need to make sure you have `unzip` installed before you try.
+⚠️ Note: you need to make sure you have `unzip` installed before you try. On Solaris, change `/usr/local/bin` to `/usr/bin`.
 
 ### Upgrading
 
@@ -99,6 +101,7 @@ To remove `grab` from your system run:
 
 ```bash
 sudo rm -f /usr/local/bin/grab
+sudo rm -f /usr/bin/grab # on solaris
 ```
 
 ⚠️ Note: this will only remove `grab` itself. All programs it installed will remain in `/usr/local/bin` and will need to be purged manually.
