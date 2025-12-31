@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="0.3.1"
+VER="0.3.2"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -19,7 +19,7 @@ function err {
     echo -e "$RD${1}$OF"
 }
 
-msg "\nGRAB✊version ${VER}"
+msg "\nGRAB✊ version ${VER}"
 msg "platform: ${OSTYPE}"
 
 command -v wget >/dev/null 2>&1 || { err "wget not installed"; exit 1;} 
@@ -84,7 +84,10 @@ if [ "$ext" == "zip" ]; then
 elif [ "$ext" == "gz" ]; then
     mkdir -p ${od}
     [ -d ${od} ] || { err "Failed to create output directory ${od}"; rm -rf ${tmpf}; exit 1; }
-    tar -xzf "${a}" -C ${od}
+    cp "${a}" "${od}/"
+    [ -f "${od}/${a}" ] || { err "Failed to copy ${a} to ${od}"; rm -rf ${tmpf}; exit 1; }
+    cd ${od} || { err "Could not switch to output directory ${od}"; rm -rf ${tmpf}; exit 1; }
+    tar -xzf "${a}"
     [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 1 level..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 1 -C ${od}; }
     [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 2 levels..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 2 -C ${od}; }
     [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 3 levels..."; rm -rf ${od}; mkdir -p ${od};  tar -xzf "${a}" --strip-components 3 -C ${od}; }
