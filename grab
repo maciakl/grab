@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="0.4.0"
+VER="0.4.1"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -37,7 +37,7 @@ fi
 
 function banner {
 
-    msg "\nGRAB✊ version ${VER}"
+    msg "\nGRAB ✊ version ${VER}"
     msg "platform: ${OSTYPE}"
 
 }
@@ -198,12 +198,16 @@ fi
 
 if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     banner
-    echo -e "\nUsage: grab <github_user/repo> [executable_name]\n"
-    echo -e "Example: burntsushi/ripgrep rg\n"
-    echo -e "This will install the latest release of rg from the repository\n"
-    echo -e "Positional arguments:\n"
-    echo -e "  github_user/repo     GitHub repository in the format user/repo\n"
-    echo -e "  executable_name      (optional) Name of the executable to install\n"
+
+    msg "\nUsage: grab <github_user/repo> [executable_name]\n"
+    msg "  <github_user/repo>   : GitHub repository in the format user/repo"
+    msg "  [executable_name]    : (optional) name of the executable to install (if different from repo name)"
+    msg "\nOptions:"
+    msg "  -h, --help           : Display this help message"
+    msg "  -v, --version        : Display grab version"
+    msg "  -l, --list           : List installed executables"
+    msg "  -r, --remove <name>  : Uninstall the specified executable\n"
+    msg "Note: options are only allowed as the first argument.\n"
     exit 0
 fi
 
