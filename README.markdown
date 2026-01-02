@@ -105,11 +105,13 @@ When you do this, `grab` will:
 To install `grab` for the first time, you can use the following command:
 
 ```bash
-wget -qN https://github.com/maciakl/grab/releases/download/v0.4.1/grab-0.4.1.zip \
+wget -qN https://github.com/maciakl/grab/releases/download/v0.4.2/grab-0.4.2.zip \
 -O /tmp/grab.zip \
 && unzip -q -o /tmp/grab.zip -d /tmp \
 && chmod +x /tmp/grab \
-&& sudo mv /tmp/grab /usr/local/bin/grab
+&& sudo mkdir -p /opt/grab \
+&& sudo mv /tmp/grab /opt/grab \
+&& ln -s /opt/grab /usr/local/bin/grab
 ```
 
 ⚠️ Note: you need to make sure you have `unzip` installed before you try. On Solaris, change `/usr/local/bin` to `/usr/bin`.
