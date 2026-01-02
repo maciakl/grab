@@ -10,12 +10,22 @@ I wrote this script because I wanted around 10% of the functionality of [fox](ht
 
 ## Usage
 
-Grab takes 2 arguments:
+The usage for `grab` is as follows:
 
-1. The repository in the format `user/repo`
-3. (optional) The name of the executable within the archive, if it's different from the repository name
+```
+Usage: grab <github_user/repo> [executable_name]
 
-You can skip the second argument, in which case it will default to the name of the repository (eg. `rg`).
+  <github_user/repo>   : GitHub repository in the format user/repo
+  [executable_name]    : (optional) name of the executable to install (if different from repo name)
+
+Options:
+  -h, --help           : Display this help message
+  -v, --version        : Display grab version
+  -l, --list           : List installed executables
+  -r, --remove <name>  : Uninstall the specified executable
+
+Note: options are only allowed as the first argument.
+```
 
 The installed program must be:
 
@@ -43,6 +53,8 @@ You are the user, you press the buttons.
 
 If you installed the wrong version, just run the command again. Grab will happily overwrite the previous version.
 
+⚠️ WARNING: if your system has a binary `/usr/local/foo` and you attempt to install a program named `foo` using grab, the original binary will be overwritten. This allows `grab` to upgrade the programs it manages, but it may potentially delete something on your system if you are not careful. You have been warned.
+
 ### Scripting Support
 
 Grab is interactive. It will always ask and wait for a numeric input. If you already know which file from the release you want to install, and where it is on the list, you can use the `yes` command to pass it in. For example, if you know you want to install the first item from the list you can do it like so:
@@ -61,16 +73,22 @@ Grab requires `bash`, `wget`, `curl`, `unzip` and `tar`. Most of these should be
 sudo apt install wget curl unzip
 ```
 
-
 ## Uninstalling Programs Installed with Grab
 
-Grab installs programs in `/usr/local/bin/` (or `/usr/bin` on solaris).
+As of 0.4.0 `grab` installs programs in `/opt/grab` and then symlinks the file in `/usr/local/bin/` (or `/usr/bin` on solaris).
 
 To uninstall a program called `foo` just run:
 
 ```bash
-    sudo rm -f /usr/local/bin/foo
+    grab -r foo
 ```
+
+When you do this, `grab` will:
+
+- verify that `/opt/grab/foo` exists
+- verify that `/usr/local/bin/foo` (or `/usr/bin/foo`) exists
+- verify that `/usr/local/bin/foo` (or `/usr/bin/foo`) is a symlink to `/opt/grab/foo`
+- then and only then, it will delete both
 
 
 ## Installing / Upgrading
@@ -78,7 +96,7 @@ To uninstall a program called `foo` just run:
 To install `grab` for the first time, you can use the following command:
 
 ```bash
-wget -qN https://github.com/maciakl/grab/releases/download/v0.3.4/grab-0.3.4.zip \
+wget -qN https://github.com/maciakl/grab/releases/download/v0.4.1/grab-0.4.1.zip \
 -O /tmp/grab.zip \
 && unzip -q -o /tmp/grab.zip -d /tmp \
 && chmod +x /tmp/grab \
@@ -100,8 +118,7 @@ grab maciakl/grab
 To remove `grab` from your system run:
 
 ```bash
-sudo rm -f /usr/local/bin/grab
-sudo rm -f /usr/bin/grab # on solaris
+grab -r grab
 ```
 
-⚠️ Note: this will only remove `grab` itself. All programs it installed will remain in `/usr/local/bin` and will need to be purged manually.
+⚠️ Note: this will only remove `grab` itself. All programs it installed will remain in `/opt/grab` and their symlinks will persist in `/usr/local/bin` (or `/usr/bin` on solaris) and will need to be purged manually.
