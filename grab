@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="0.3.4"
+VER="0.4.0"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -19,114 +19,130 @@ function err {
     echo -e "$RD${1}$OF"
 }
 
-msg "\nGRAB✊ version ${VER}"
-msg "platform: ${OSTYPE}"
 
 command -v wget >/dev/null 2>&1 || { err "wget not installed"; exit 1;} 
 command -v unzip >/dev/null 2>&1 || { err "unzip not installed"; exit 1;} 
 command -v tar >/dev/null 2>&1 || { err "tar not installed"; exit 1;} 
 command -v curl >/dev/null 2>&1 || { err "curl not installed"; exit 1;} 
 
+repo="/opt/grab"
 indir="/usr/local/bin"
 
 if [[ "${OSTYPE}" == *"solaris"* ]]; then
-    msg "Detected Solaris, adjusting some settings..."
     indir="/usr/bin"
     grep="/usr/xpg4/bin/grep"
 else
     grep="grep"
 fi
 
-[ -z "$1" ] && { err "1st arggument must be a github address in the format: user/repo"; exit 1; }
 
-u="${1}"        # url
-p="${1##*/}"    # project name
+function install {
 
-if [ -z "$2" ]; then
-    ex=${1##*/}
-    warn "2rd arggument (executable name) missing, assuming it is: ${ex}"
-    e="${ex}"
-else
-    e="${2}"
-fi
 
-# grab list of released files from github
-lst=$(curl -s "https://api.github.com/repos/${u}/releases/latest" \
-    | grep "browser_download_url" | cut -d '"' -f 4 | xargs -n1 basename \
-    | grep "${p}" | $grep -E 'zip$|gz$') \
-    || { err "unable to find eligible files in the latest release of this repository"; exit 1; }
+    [ -z "$1" ] && { err "1st arggument must be a github address in the format: user/repo"; exit 1; }
 
-echo -e "\n👉 Choose the version you would like to install:\n"
-select choice in ${lst}; do
-    if [[ -n $choice ]]; then
-        a="${choice}"
-        msg "\nYou chose to install ${a}"
-        break
+    u="${1}"        # url
+    p="${1##*/}"    # project name
+
+    if [ -z "$2" ]; then
+        ex=${1##*/}
+        warn "2rd arggument (executable name) missing, assuming it is: ${ex}"
+        e="${ex}"
     else
-        err "Invalid choice, try again"
+        e="${2}"
     fi
-done
+
+    # grab list of released files from github
+    lst=$(curl -s "https://api.github.com/repos/${u}/releases/latest" \
+        | grep "browser_download_url" | cut -d '"' -f 4 | xargs -n1 basename \
+        | grep "${p}" | $grep -E 'zip$|gz$') \
+        || { err "unable to find eligible files in the latest release of this repository"; exit 1; }
+
+    echo -e "\n👉 Choose the version you would like to install:\n"
+    select choice in ${lst}; do
+        if [[ -n $choice ]]; then
+            a="${choice}"
+            msg "\nYou chose to install ${a}"
+            break
+        else
+            err "Invalid choice, try again"
+        fi
+    done
 
 
-tmpf="/tmp/grab_cache_$$"
-msg "Creating cache in ${tmpf}"
-mkdir "${tmpf}"
+    tmpf="/tmp/grab_cache_$$"
+    msg "Creating cache in ${tmpf}"
+    mkdir "${tmpf}"
 
-[ -d "${tmpf}" ] || { err "failed to create cache folder ${tmpf}"; exit 1; }
+    [ -d "${tmpf}" ] || { err "failed to create cache folder ${tmpf}"; exit 1; }
 
-cd ${tmpf} || { err "could not switch to cache folder ${tmpf}"; exit; }
+    cd ${tmpf} || { err "could not switch to cache folder ${tmpf}"; exit; }
 
-msg "Downloading ${a} from github.com/${u}" 
-wget -qN "https://github.com/${u}/releases/latest/download/${a}" || { err "Unable to download https://github.com/${u}/releases/latest/download/${a}"; exit 1; }
+    msg "Downloading ${a} from github.com/${u}" 
+    wget -qN "https://github.com/${u}/releases/latest/download/${a}" || { err "Unable to download https://github.com/${u}/releases/latest/download/${a}"; exit 1; }
 
-[ -f "${a}" ] || { err "File ${a} not found in ${tmpf}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+    [ -f "${a}" ] || { err "File ${a} not found in ${tmpf}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
-ext="${a##*.}"
-msg "Archive type is ${ext}"
+    ext="${a##*.}"
+    msg "Archive type is ${ext}"
 
-od="${tmpf}/out"
-msg "Extracting ${e} from ${a} into ${od}"
+    od="${tmpf}/out"
+    msg "Extracting ${e} from ${a} into ${od}"
 
-if [ "$ext" == "zip" ]; then
-    unzip -oq "${a}" -d ${od}
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${e}, flattening..."; rm -rf ${od}; mkdir -p ${od}; unzip -oqj "${a}" -d ${od}; }
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
-elif [ "$ext" == "gz" ]; then
-    mkdir -p ${od}
-    [ -d ${od} ] || { err "Failed to create output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
-    cp "${a}" "${od}/"
-    [ -f "${od}/${a}" ] || { err "Failed to copy ${a} to ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
-    cd ${od} || { err "Could not switch to output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
-    tar -xzf "${a}"
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 1 level..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 1 -C ${od}; }
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 2 levels..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 2 -C ${od}; }
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 3 levels..."; rm -rf ${od}; mkdir -p ${od};  tar -xzf "${a}" --strip-components 3 -C ${od}; }
-    [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${od}/${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
-else
-    err "Unable to extract from ${ext}"
+    if [ "$ext" == "zip" ]; then
+        unzip -oq "${a}" -d ${od}
+        [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${e}, flattening..."; rm -rf ${od}; mkdir -p ${od}; unzip -oqj "${a}" -d ${od}; }
+        [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
+    elif [ "$ext" == "gz" ]; then
+        mkdir -p ${od}
+        [ -d ${od} ] || { err "Failed to create output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+        cp "${a}" "${od}/"
+        [ -f "${od}/${a}" ] || { err "Failed to copy ${a} to ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+        cd ${od} || { err "Could not switch to output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+        tar -xzf "${a}"
+        [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 1 level..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 1 -C ${od}; }
+        [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 2 levels..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 2 -C ${od}; }
+        [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 3 levels..."; rm -rf ${od}; mkdir -p ${od};  tar -xzf "${a}" --strip-components 3 -C ${od}; }
+        [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${od}/${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
+    else
+        err "Unable to extract from ${ext}"
+        cd /tmp
+        rm -rf ${tmpf}
+    fi
+
+    [ -f ${od}/"${e}" ] || { err "Unable to unzip ${a}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+    msg "Making ${e} executable..."
+    chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+    msg "Installing ${e} to ${indir}..."
+    sudo mv ${od}/"${e}" "${indir}/" || { err "failed to move ${e} to ${indir}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+    [ -f ${indir}/"${e}" ] || { err "failed to install ${e}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+    msg "Successfully installed!\n"
+
+    warn "To uninstall: sudo rm -f ${indir}/${e}"
+
+    msg "\nDeleting ${tmpf} and cleaning up..."
     cd /tmp
     rm -rf ${tmpf}
+
+    [ -d "${tmpf}" ] && { err "Failed to delete cache folder ${tmpf}"; exit 1; }
+
+    msg "done 👍\n"
+
+}
+
+if [ "$1" == "-v" ] || [ "$1" == "--version" ]; then
+    echo "${VER}"
+    exit 0
 fi
 
-[ -f ${od}/"${e}" ] || { err "Unable to unzip ${a}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
-msg "Making ${e} executable..."
-chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+msg "\nGRAB✊ version ${VER}"
+msg "platform: ${OSTYPE}"
 
-msg "Installing ${e} to ${indir}..."
-sudo mv ${od}/"${e}" "${indir}/" || { err "failed to move ${e} to ${indir}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+install "$1" "$2"
 
-[ -f ${indir}/"${e}" ] || { err "failed to install ${e}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
-
-msg "Successfully installed!\n"
-
-warn "To uninstall: sudo rm -f ${indir}/${e}"
-
-msg "\nDeleting ${tmpf} and cleaning up..."
-cd /tmp
-rm -rf ${tmpf}
-
-[ -d "${tmpf}" ] && { err "Failed to delete cache folder ${tmpf}"; exit 1; }
-
-msg "done 👍\n"
 
