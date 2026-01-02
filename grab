@@ -35,6 +35,12 @@ else
     grep="grep"
 fi
 
+function banner {
+
+    msg "\nGRAB✊ version ${VER}"
+    msg "platform: ${OSTYPE}"
+
+}
 
 function install {
 
@@ -116,14 +122,19 @@ function install {
     msg "Making ${e} executable..."
     chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
-    msg "Installing ${e} to ${indir}..."
-    sudo mv ${od}/"${e}" "${indir}/" || { err "failed to move ${e} to ${indir}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+    msg "Installing ${e} to ${repo}..."
+    sudo mv ${od}/"${e}" "${repo}/" || { err "failed to move ${e} to ${repo}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
-    [ -f ${indir}/"${e}" ] || { err "failed to install ${e}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+    [ -f ${repo}/"${e}" ] || { err "failed to install ${e}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+    msg "\nLinking to ${indir}/${e}..."
+    sudo ln -sf "${repo}/${e}" "${indir}/${e}" || { err "failed to link ${e} to ${indir}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+    [ -f "${indir}/${e}" ] || { err "failed to create symlink in ${indir}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
     msg "Successfully installed!\n"
 
-    warn "To uninstall: sudo rm -f ${indir}/${e}"
+    warn "To uninstall: grab -r ${e}"
 
     msg "\nDeleting ${tmpf} and cleaning up..."
     cd /tmp
@@ -135,12 +146,49 @@ function install {
 
 }
 
-function banner {
+function remove {
+    banner
 
-    msg "\nGRAB✊ version ${VER}"
-    msg "platform: ${OSTYPE}"
+    [ -z "$1" ] && { err "1st arggument must be the name of the executable to remove"; exit 1; }
+
+    e="${1}"
+
+
+    # make sure /opt/grab/<e> exists and that <indir>/<e> is a symlink to it
+    if [ -f "${repo}/${e}" ] && [ -L "${indir}/${e}" ] && [ "$(readlink "${indir}/${e}")" == "${repo}/${e}" ]; then
+
+        msg "\nRemoving ${repo}/${e}..."
+        sudo rm -f "${repo}/${e}" || { err "failed to remove ${repo}/${e}"; exit 1; }
+        
+        if [ -L "${indir}/${e}" ]; then
+            msg "Removing symlink ${indir}/${e}..."
+            sudo rm -f "${indir}/${e}" || {  err "failed to remove symlink ${indir}/${e}"; exit 1; }
+        else
+            err "symlink ${indir}/${e} not found"
+            warn "program may not have been properly linked during installation"
+            exit 1;
+        fi
+
+    else
+        err "${repo}/${e} not found..."
+        warn "${e} may not have been installed by grab, try removing manually"
+        exit 1
+    fi
+
+
+    msg "\nSuccessfully uninstalled ${e}!\n"
+    msg "done 👍\n"
 
 }
+
+
+function firstrun {
+    msg "It looks like you are running grab for the first time..."
+    warn "Creating installation directory at ${repo}..."
+    sudo mkdir -p "${repo}" || { err "failed to create ${repo}"; exit 1; }
+}
+
+[ -d "${repo}" ] || firstrun
 
 
 if [ "$1" == "-v" ] || [ "$1" == "--version" ]; then
@@ -148,11 +196,8 @@ if [ "$1" == "-v" ] || [ "$1" == "--version" ]; then
     exit 0
 fi
 
-# if the first argument is empty or -h, show usage and exit
-
 if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     banner
-
     echo -e "\nUsage: grab <github_user/repo> [executable_name]\n"
     echo -e "Example: burntsushi/ripgrep rg\n"
     echo -e "This will install the latest release of rg from the repository\n"
@@ -162,6 +207,25 @@ if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     exit 0
 fi
 
+# if the first argument is -l or --list, list installed executables
+
+if [ "$1" == "-l" ] || [ "$1" == "--list" ]; then
+    banner
+    msg "\nInstalled executables in ${repo}:\n"
+    ls -1 "${repo}"
+
+    msg "\nTo uninstall an executable, use: grab -r <executable_name>\n"
+    exit 0
+fi
+
+if [ "$1" == "-r" ] || [ "$1" == "--remove" ]; then
+    if [ -z "$2" ]; then
+        err "2nd argument must be the name of the executable to remove"
+        exit 1
+    fi
+    remove "$2"
+    exit 0
+fi
 
 install "$1" "$2"
 
