@@ -213,12 +213,12 @@ if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     msg "  -h, --help           : Display this help message"
     msg "  -v, --version        : Display grab version"
     msg "  -l, --list           : List installed executables"
+    msg "  -ls, --list-simple   : Script friendly list (no formatting)"
     msg "  -r, --remove <name>  : Uninstall the specified executable\n"
     msg "Note: options are only allowed as the first argument.\n"
     exit 0
 fi
 
-# if the first argument is -l or --list, list installed executables
 
 if [ "$1" == "-l" ] || [ "$1" == "--list" ]; then
     banner
@@ -226,6 +226,11 @@ if [ "$1" == "-l" ] || [ "$1" == "--list" ]; then
     ls -1 "${repo}"
 
     msg "\nTo uninstall an executable, use: grab -r <executable_name>\n"
+    exit 0
+fi
+
+if [ "$1" == "-ls" ] || [ "$1" == "--list-simple" ]; then
+    ls -1 "${repo}"
     exit 0
 fi
 
@@ -238,6 +243,10 @@ if [ "$1" == "-r" ] || [ "$1" == "--remove" ]; then
     exit 0
 fi
 
-install "$1" "$2"
-
-
+# check that the first argument contains a / character, if not exit with error
+if [[ "$1" == *"/"* ]]; then
+    install "$1" "$2"
+else
+    err "1st argument must be a github address in the format: user/repo or an option startng with -"
+    exit 1
+fi
