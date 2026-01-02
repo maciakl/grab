@@ -111,7 +111,7 @@ wget -qN https://github.com/maciakl/grab/releases/download/v0.4.2/grab-0.4.2.zip
 && chmod +x /tmp/grab \
 && sudo mkdir -p /opt/grab \
 && sudo mv /tmp/grab /opt/grab \
-&& ln -s /opt/grab /usr/local/bin/grab
+&& sudo ln -sf /opt/grab /usr/local/bin/grab
 ```
 
 ⚠️ Note: you need to make sure you have `unzip` installed before you try. On Solaris, change `/usr/local/bin` to `/usr/bin`.
