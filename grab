@@ -38,6 +38,7 @@ fi
 
 function install {
 
+    banner
 
     [ -z "$1" ] && { err "1st arggument must be a github address in the format: user/repo"; exit 1; }
 
@@ -134,14 +135,33 @@ function install {
 
 }
 
+function banner {
+
+    msg "\nGRAB✊ version ${VER}"
+    msg "platform: ${OSTYPE}"
+
+}
+
+
 if [ "$1" == "-v" ] || [ "$1" == "--version" ]; then
     echo "${VER}"
     exit 0
 fi
 
+# if the first argument is empty or -h, show usage and exit
 
-msg "\nGRAB✊ version ${VER}"
-msg "platform: ${OSTYPE}"
+if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    banner
+
+    echo -e "\nUsage: grab <github_user/repo> [executable_name]\n"
+    echo -e "Example: burntsushi/ripgrep rg\n"
+    echo -e "This will install the latest release of rg from the repository\n"
+    echo -e "Positional arguments:\n"
+    echo -e "  github_user/repo     GitHub repository in the format user/repo\n"
+    echo -e "  executable_name      (optional) Name of the executable to install\n"
+    exit 0
+fi
+
 
 install "$1" "$2"
 
