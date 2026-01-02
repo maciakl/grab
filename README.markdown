@@ -22,6 +22,7 @@ Options:
   -h, --help           : Display this help message
   -v, --version        : Display grab version
   -l, --list           : List installed executables
+  -ls, --list-simple   : Script friendly list (no formatting)
   -r, --remove <name>  : Uninstall the specified executable
 
 Note: options are only allowed as the first argument.
