@@ -54,7 +54,7 @@ You are the user, you press the buttons.
 
 If you installed the wrong version, just run the command again. Grab will happily overwrite the previous version.
 
-⚠️ WARNING: if your system has a binary `/usr/local/foo` and you attempt to install a program named `foo` using grab, the original binary will be overwritten. This allows `grab` to upgrade the programs it manages, but it may potentially delete something on your system if you are not careful. You have been warned.
+⚠️ Note: As of 0.4.2 `grab` has clobbering protection. If a file with the same name as the one already exists in the default install directory, `grab` will warn and exit. This does not include symlinks managed by `grab` itself.
 
 ### Scripting Support
 
@@ -73,6 +73,14 @@ Grab requires `bash`, `wget`, `curl`, `unzip` and `tar`. Most of these should be
 ```bash
 sudo apt install wget curl unzip
 ```
+## Upgrading Progeams Installed with Grab
+
+To uphrade a program to the latest version simply install it again. For example, to upgrade `grab` run:
+
+```bash
+grab maciakl/grab
+```
+This will automatically overwrite the old version with the new.
 
 ## Uninstalling Programs Installed with Grab
 
