@@ -52,9 +52,9 @@ Grab is not smart enough to figure out which released version is correct for you
 
 You are the user, you press the buttons.
 
-If you installed the wrong version, just run the command again. Grab will happily overwrite the previous version.
+If you accidentally installed the wrong version, just run the command again. Grab will happily overwrite the previous version.
 
-⚠️ Note: As of 0.4.2 `grab` has clobbering protection. If a file with the same name as the one already exists in the default install directory, `grab` will warn and exit. This does not include symlinks managed by `grab` itself.
+⚠️ Note: As of 0.4.2 `grab` has clobbering protection. If a file with the same name as the one you are trying to install already exists in `/usr/local/bin` (or `/usr/bin/` on solaris) then grab will warn you and quit, to prevent over-writing it in case it is a system binary, or something managed by a different package manager.
 
 ### Scripting Support
 
@@ -66,13 +66,23 @@ yes 1 | grab maciakl/grab
 
 ⚠️ Note: the ordering of the files may change between releases. Grab always downloads the latest release.
 
+If you want to produce a list of packages managed by `grab` use:
+
+```bash
+grab -ls
+```
+
+It will produce a script friendly list, one package per line.
+
+
 ## Dependencies
 
-Grab requires `bash`, `wget`, `curl`, `unzip` and `tar`. Most of these should be installed by default. If you are missing them, you can install them using your package manager. For example, on Debian-based systems you can run:
+Grab requires `bash`, `wget`, `curl`, `unzip`. Most of these should be installed by default. If you are missing them, you can install them using your package manager. For example, on Debian-based systems you can run:
 
 ```bash
 sudo apt install wget curl unzip
 ```
+
 ## Upgrading Progeams Installed with Grab
 
 To uphrade a program to the latest version simply install it again. For example, to upgrade `grab` run:
