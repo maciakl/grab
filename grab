@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="0.4.2"
+VER="0.4.3"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -104,27 +104,36 @@ function install {
     msg "Extracting ${e} from ${a} into ${od}"
 
     if [ "$ext" == "zip" ]; then
+
         unzip -oq "${a}" -d ${od}
         [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${e}, flattening..."; rm -rf ${od}; mkdir -p ${od}; unzip -oqj "${a}" -d ${od}; }
         [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
     elif [ "$ext" == "gz" ]; then
+
         mkdir -p ${od}
         [ -d ${od} ] || { err "Failed to create output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
         cp "${a}" "${od}/"
         [ -f "${od}/${a}" ] || { err "Failed to copy ${a} to ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
         cd ${od} || { err "Could not switch to output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
         tar -xzf "${a}"
-        [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 1 level..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 1 -C ${od}; }
-        [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 2 levels..."; rm -rf ${od}; mkdir -p ${od}; tar -xzf "${a}" --strip-components 2 -C ${od}; }
-        [ -f ${od}/"${e}" ] || { ls -lh ${od}; warn "Unable to find ${od}/${e}, flattening 3 levels..."; rm -rf ${od}; mkdir -p ${od};  tar -xzf "${a}" --strip-components 3 -C ${od}; }
-        [ -f ${od}/"${e}" ] || { ls -lh ${od}; err "Unable to find ${od}/${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+        if [ ! -f "${e}" ]; then
+            warn "Unable to find ${e}, searching in subdirectories..."
+            etmp=$(find . -type f -name "${e}" | head -n 1 | sed 's|^\./||')
+            [ -z "${etmp}" ] && { ls -lh; err "Unable to find ${e}, giving up."; cd /tmp; rm -rf ${tmpf}; exit 1; }
+            cp "${etmp}" "${od}/"
+            [ -f "${od}/${e}" ] || { err "Unable to copy ${etmp} to ${od}/${e}"; cd /tmp; rm -rf ${tmpf}; exit 1; } 
+        fi
     else
         err "Unable to extract from ${ext}"
         cd /tmp
         rm -rf ${tmpf}
     fi
 
-    [ -f ${od}/"${e}" ] || { err "Unable to unzip ${a}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+    [ -f ${od}/"${e}" ] || { err "Unable to extract ${a}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
 
     msg "Making ${e} executable..."
     chmod +x ${od}/"${e}" || { err "Unable to make ${e} executable"; cd /tmp; rm -rf ${tmpf}; exit 1; }
