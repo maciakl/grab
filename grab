@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="0.4.4"
+VER="0.5.0"
 
 GR="\033[0;36m"
 RD="\033[0;31m"
@@ -69,7 +69,7 @@ function install {
     # grab list of released files from github
     lst=$(curl -s "https://api.github.com/repos/${u}/releases/latest" \
         | grep "browser_download_url" | cut -d '"' -f 4 | xargs -n1 basename \
-        | grep "${p}" | $grep -E 'zip$|gz$') \
+        | $grep -E "${p}|${e}" | $grep -E 'zip$|gz$|appimage$') \
         || { err "unable to find eligible files in the latest release of this repository"; exit 1; }
 
     echo -e "\n👉 Choose the version you would like to install:\n"
@@ -127,6 +127,16 @@ function install {
             cp "${etmp}" "${od}/"
             [ -f "${od}/${e}" ] || { err "Unable to copy ${etmp} to ${od}/${e}"; cd /tmp; rm -rf ${tmpf}; exit 1; } 
         fi
+    elif [ "$ext" == "AppImage" ] || [ "$ext" == "appimage" ]; then
+
+        mkdir -p ${od}
+        [ -d ${od} ] || { err "Failed to create output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+        cp "${a}" "${od}/"
+        [ -f "${od}/${a}" ] || { err "Failed to copy ${a} to ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+
+        cd ${od} || { err "Could not switch to output directory ${od}"; cd /tmp; rm -rf ${tmpf}; exit 1; }
+        mv "${a}" "${e}"
     else
         err "Unable to extract from ${ext}"
         cd /tmp
