@@ -13,7 +13,7 @@ checksum:
 release: $(ARCHIVE) checksum
 	git tag -a "v$(VERSION)" -m "Release version $(VERSION)"
 	git push origin "v$(VERSION)"
-	gh release create "$(VERSION)" $(ARCHIVE) $(ARCHIVE).sha256 --title "$(VERSION)" --generate-notes
+	gh release create "v$(VERSION)" $(ARCHIVE) $(ARCHIVE).sha256 --title "v$(VERSION)" --generate-notes
 
 clean:
 	rm -f $(TARGET)-*.zip
