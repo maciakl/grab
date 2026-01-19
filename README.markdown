@@ -93,7 +93,7 @@ Grab requires `bash`, `wget`, `curl`, `unzip`, `tar` and `sed`. Most of these sh
 sudo apt install wget curl unzip
 ```
 
-## Upgrading Progeams Installed with Grab
+## Upgrading Programs Installed with Grab
 
 To uphrade a program to the latest version simply install it again. For example, to upgrade `grab` run:
 
