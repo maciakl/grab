@@ -50,7 +50,8 @@ Examples:
 ```
 Grab is not smart enough to figure out which released version is correct for your platform, so it will list the available files and ask you which one you want.
 
-![grab](https://github.com/user-attachments/assets/1a79c91f-a687-4858-bee1-9621373d0c2c)
+<img width="832" height="499" alt="grab 0.5.3 screenshot" src="https://github.com/user-attachments/assets/7bcb3643-2ae7-45d1-9744-5b42199c0ffa" />
+
 
 You are the user, you press the buttons.
 
@@ -125,7 +126,7 @@ When you do this, `grab` will:
 To install `grab` for the first time, you can use the following command:
 
 ```bash
-wget -qN https://github.com/maciakl/grab/releases/download/v0.5.2/grab-0.5.2.zip \
+wget -qN https://github.com/maciakl/grab/releases/download/v0.5.3/grab-0.5.3.zip \
 -O /tmp/grab.zip \
 && unzip -q -o /tmp/grab.zip -d /tmp \
 && chmod +x /tmp/grab \
